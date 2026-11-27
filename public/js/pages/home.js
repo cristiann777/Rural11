@@ -1161,4 +1161,4 @@ logoutConfirm.addEventListener('click', async () => {
 });
 
 init();
-// Ejecuta la inicialización en cuanto se carga el script.
+// Ejecuta la inicialización en cuanto se carga el script.
