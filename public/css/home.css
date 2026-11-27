@@ -960,3 +960,8 @@ a.rm-node:focus-visible .rm-disc { stroke: var(--text); stroke-width: 4; }
 @media (max-width: 420px) {
   .ptabs__tab { flex-direction: column; gap: 0.1rem; font-size: 0.72rem; }
 }
+
+/* Mejora HU-26 (Cristian): comparación con el intento anterior */
+.past-item__delta { font-size: 0.75rem; font-weight: 700; color: var(--muted); font-variant-numeric: tabular-nums; }
+.past-item__delta.is-up { color: var(--success); }
+.past-item__delta.is-down { color: var(--danger); }
