@@ -710,6 +710,36 @@ async function loadHomeData() {
 const PAST_PAGE = 15;
 let pastAll = [];
 let pastShown = 0;
+let pastDeltas = [];
+// Mejora HU-26 (Cristian): diferencia de puntaje frente al intento anterior de la misma actividad.
+
+function activityKey(att) {
+  // Identifica "la misma actividad" para poder comparar intentos entre sí.
+  if (att.isSimulacro) return `simulacro:${att.questionnaireId || ''}`;
+  if (att.isSeguida) return 'seguidas';
+  return att.questionnaireId || att.category || 'otro';
+}
+
+function calcularMejoras(history) {
+  // history viene del más reciente al más antiguo; se recorre al revés para
+  // comparar cada intento con el anterior de la misma actividad.
+  const deltas = new Array(history.length).fill(null);
+  const ultimo = {};
+  for (let i = history.length - 1; i >= 0; i -= 1) {
+    const clave = activityKey(history[i]);
+    const pct = Number(history[i].percentage) || 0;
+    if (clave in ultimo) deltas[i] = pct - ultimo[clave];
+    ultimo[clave] = pct;
+  }
+  return deltas;
+}
+
+function mejoraHtml(delta) {
+  if (delta === null || delta === undefined) return '<span class="past-item__delta">Primer intento</span>';
+  if (delta === 0) return '<span class="past-item__delta">= Igual que tu intento anterior</span>';
+  const sube = delta > 0;
+  return `<span class="past-item__delta ${sube ? 'is-up' : 'is-down'}">${sube ? '▲ +' : '▼ '}${delta} pts vs. tu intento anterior</span>`;
+}
 
 function attemptKind(att) {
   if (att.isSimulacro) return 'Simulacro';
@@ -756,6 +786,7 @@ function pastItemHtml(att, index) {
         <div class="past-item__score">
           <span class="pill ${att.passed ? 'pill--ok' : 'pill--bad'}">${att.percentage}% · ${att.passed ? 'Aprobado' : 'No aprobado'}</span>
           <span class="past-item__hits">${att.correctCount} de ${att.totalQuestions} correctas</span>
+          ${mejoraHtml(pastDeltas[index])}
         </div>
       </div>
       <details class="past-item__more" data-index="${index}">
@@ -778,6 +809,7 @@ function renderPastResults(history) {
   if (!list) return;
   // getUserAttempts ya trae solo los intentos del estudiante autenticado, del más reciente al más antiguo.
   pastAll = history;
+  pastDeltas = calcularMejoras(history);
   pastShown = 0;
   list.innerHTML = '';
   document.getElementById('past-empty').hidden = history.length > 0;
